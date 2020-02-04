@@ -3,7 +3,7 @@
 
 close all
 
-tspan = [0 120000];
+tspan = [0 500000];
 dose = 6E-4; %initial dose in M
 FcR_init = 0.00634; %M FcR in cells
 FcRn_init = 1660E-8; %M FcRn in cells
@@ -20,15 +20,18 @@ t_max = t(index)
 
 
 %plotting
-plot(t,y(:,1))
-hold on
+% plot(t,y(:,1))
+% hold on
 plot(t,y(:,15))
 hold on
 plot(t,y(:,29))
 
-legend('SC','Lymph','Plasma')
+legend('Lymph','Plasma')
 xlabel('time (min)')
 ylabel('concentration (M)')
+% xticks([0:144000:50000])
+% xticklabels({'0','20','40','60'})
+%ylim([0 5.9*10^-8])
 title('Stelara SC')
 
 function dCdt = odefcn(t,C)
@@ -39,14 +42,16 @@ k_pino_L = 1.3787E-11;%pinocytosis lymph
 k_pino_P = 6.6445E-13;%pinocytosis plasma
 k_in = .0462; %rate of A-FcR entering cell-----ESTIMATE
 k_r = 0.000924; %endosomal recycling rate
-k_L = 0.000417/5; %flow rate sc to lymph
-k_P = 0.00056/5; %flow rate sc to plasma
+k_L = 0.0000417/5; %flow rate sc to lymph
+k_P = 0.000056/5; %flow rate sc to plasma
 k_LP = 0.000278; %flow rate lymph to plasma
 
-k_fcr_out = .05; %Ka for fcr binding outside cell-----random number, was too high
+k_fcr_out = 10; %Ka for fcr binding outside cell-----random number, was too high
 k_fcr_in = 0.0000001; %Ka for fcr binding in cell-----ESTIMATE
 k_n_out = 0.0000001; %Ka for fcrn binding outside cell-----ESTIMATE
 k_n_in = 1315780; %Ka for fcrn binding in cell
+
+R = 100; %Partition Coefficient for stelara
 
 %Equilibrium expressions-------------
 %SC
@@ -78,7 +83,7 @@ C(39) = C(42)*C(36)*k_n_in;
 
 dCdt = [
     %Subcutaneous---------------------
-    k_r*(C(4)+C(5)+C(6)) - k_L*C(1) - k_P*C(1) - k_pino_sc - k_in*C(3);...%1
+    k_r*(C(4)+C(5)+C(6)) - k_L/R*C(1) - k_P/R*C(1) - k_pino_sc - k_in*C(3);...%1
     0;...%2
     -k_in*C(3);...%3
     -k_r*C(4);...%4
@@ -93,7 +98,7 @@ dCdt = [
     -k_d*C(13);...%13
     0;...%14
     %Lymph-----------------------------
-    k_L*C(1) - k_in*C(17)+ k_r*(C(22)+C(24)+C(25)) - k_LP*C(15)-k_pino_L;...%15
+    k_L/R*C(1) - k_in*C(17)+ k_r*(C(22)+C(24)+C(25)) - k_LP*C(15)-k_pino_L;...%15
     0;...%16
     -k_in*C(17);...%17
     k_r*C(22);...%18
@@ -108,7 +113,7 @@ dCdt = [
     -k_d*C(27);...%27
     k_pino_L - k_d*C(28);...%28
     %Plasma----------------------------
-    k_P*C(1) + k_LP*C(15) - k_in*C(31) + k_r*(C(36)+C(38)+C(39))- k_pino_P;...%29
+    k_P/R*C(1) + k_LP*C(15) - k_in*C(31) + k_r*(C(36)+C(38)+C(39))- k_pino_P;...%29
     0;...%30
     -k_in*C(31);...%31
     k_r*C(36);...%32
