@@ -18,18 +18,32 @@ C0 = [dose,FcR_init,0,0,0,0,FcRn_init,0,0,0,0,0,0,0,... %SC
 [t,y] = ode15s(@odefcn,tspan,C0);
 
 %multiple doses--------------------------------------------------
-A = y(end,:);%putt out the last values for everything
+A = y(end,:);%pull out the last values for everything
+A(1) = A(1)+dose;
+
 y_tot = y(:,:);
 y_P = y(:,29);
 
 t2 = t(end);
 t_P = t;
 
+C0 = A;
+for i = 1:3
+   
+    [t1,y1] = ode15s(@odefcn,tspan,C0);
+
+    y_P = [y_P; y1(:,29)];
+    A = y1(end,:);
+    t2 = t1+t2(end);
+    t_P = [t_P;t2];
+    C0 = A;%C0 starts where last left off
+    C0(1) = C0(1)+dose;
+end
 
 for i = 1:3
     C0 = A;%C0 starts where last left off
     
-    [t1,y1] = ode45(@odefcn,tspan,C0);
+    [t1,y1] = ode15s(@odefcn,tspan,C0);
 
     y_P = [y_P; y1(:,29)];
     A = y1(end,:);
